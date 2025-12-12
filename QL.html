@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Wish - Webcam Queue Counter</title>
+
+  <!-- TensorFlow.js and COCO-SSD -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2"></script>
+
+  <style>
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background: #f4f7fb;
+      margin: 24px;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    #left {
+      position: relative;
+    }
+    video, canvas {
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      max-width: 720px;
+      width: 720px;
+      height: auto;
+      display: block;
+    }
+    .card {
+      background: #fff;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      width: 360px;
+    }
+    h2 { margin: 0 0 12px 0; font-size: 20px; }
+    .stat { font-size: 18px; margin: 10px 0; }
+    #messageBox {
+      margin-top: 18px;
+      padding: 12px;
+      background: #eaf6ff;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+    }
+    label { font-size: 13px; color: #555; display:block; margin-top:8px; }
+    input[type="number"] { width:100%; padding:8px; margin-top:6px; border-radius:6px; border:1px solid #ddd; }
+    button { margin-top:12px; padding:10px 12px; border-radius:8px; border:none; background:#2563eb; color:white; cursor:pointer; }
+    small { color:#666; display:block; margin-top:6px; }
+  </style>
+</head>
+<body>
+
+  <div id="left">
+    <video id="webcam" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>Wish — Queue Monitor</h2>
+
+    <div class="stat"><strong>People in Queue:</strong> <span id="count">0</span></div>
+    <div class="stat"><strong>Estimated Wait Time:</strong> <span id="wait">--</span></div>
+
+    <label>Average service time per person (minutes)</label>
+    <input id="avgService" type="number" min="0.5" step="0.1" value="2.5">
+    <small>Set to 2–3 for 2–3 minutes. Default = 2.5 minutes</small>
+
+    <button id="restartBtn">Restart Camera</button>
+
+    <div id="messageBox">Please wait…</div>
+  </div>
+
+<script>
+(async () => {
+  const video = document.getElementById('webcam');
+  const overlay = document.getElementById('overlay');
+  const ctx = overlay.getContext('2d');
+
+  const countEl = document.getElementById('count');
+  const waitEl = document.getElementById('wait');
+  const avgServiceInput = document.getElementById('avgService');
+  const messageBox = document.getElementById('messageBox');
+  const restartBtn = document.getElementById('restartBtn');
+
+  // Messages rotated every 10 seconds
+  const messages = [
+    "Please wait…",
+    "You're almost there…",
+    "Your turn will be soon!",
+    "Thank you for your patience!",
+    "Hang tight — we're getting to you!"
+  ];
+  let msgIndex = 0;
+  setInterval(() => {
+    messageBox.innerText = messages[msgIndex];
+    msgIndex = (msgIndex + 1) % messages.length;
+  }, 10000); // 10s
+
+  // start camera helper
+  async function startCamera() {
+    if (video.srcObject) {
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      video.srcObject = stream;
+      await new Promise((res) => video.onloadedmetadata = res);
+      overlay.width = video.videoWidth;
+      overlay.height = video.videoHeight;
+    } catch (e) {
+      alert('Could not access camera. Please allow camera access and try again.');
+      console.error(e);
+    }
+  }
+
+  restartBtn.addEventListener('click', async () => {
+    // stop existing tracks then restart
+    if (video.srcObject) {
+      const tracks = video.srcObject.getTracks();
+      tracks.forEach(t => t.stop());
+      video.srcObject = null;
+    }
+    await startCamera();
+  });
+
+  await startCamera();
+
+  // Load the COCO-SSD model
+  const model = await cocoSsd.load();
+  console.log('Model loaded:', model);
+
+  // Drawing helpers
+  function drawBox(box, label, score) {
+    ctx.strokeStyle = '#00FF7F';
+    ctx.lineWidth = Math.max(2, Math.round(overlay.width / 300));
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    const [x, y, width, height] = box;
+    ctx.strokeRect(x, y, width, height);
+    const text = `${label} ${(score*100).toFixed(0)}%`;
+    ctx.font = `${Math.max(12, Math.round(overlay.width / 50))}px Arial`;
+    const textWidth = ctx.measureText(text).width;
+    const pad = 6;
+    ctx.fillRect(x, y - 24, textWidth + pad, 24);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, x + 4, y - 6);
+  }
+
+  // Main detect loop
+  async function detectLoop() {
+    if (video.readyState !== 4) {
+      requestAnimationFrame(detectLoop);
+      return;
+    }
+
+    // run detection
+    const predictions = await model.detect(video);
+
+    // clear overlay
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+    // count people
+    const people = predictions.filter(p => p.class === 'person' && p.score >= 0.5);
+    const peopleCount = people.length;
+    countEl.innerText = peopleCount;
+
+    // draw boxes for persons
+    for (const p of people) {
+      // p.bbox = [x, y, width, height] in pixels relative to video
+      drawBox(p.bbox, p.class, p.score);
+    }
+
+    // compute estimated wait time
+    const avgServiceMinutes = parseFloat(avgServiceInput.value) || 2.5;
+    const waitMinutes = peopleCount * avgServiceMinutes;
+    const minutes = Math.floor(waitMinutes);
+    const seconds = Math.round((waitMinutes - minutes) * 60);
+    waitEl.innerText = `${minutes} min ${seconds} sec`;
+
+    requestAnimationFrame(detectLoop);
+  }
+
+  detectLoop();
+
+})(); // end async IIFE
+</script>
+
+</body>
+</html>
+
