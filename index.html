@@ -1,191 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>Wish - Webcam Queue Counter</title>
-
-  <!-- TensorFlow.js and COCO-SSD -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2"></script>
-
-  <style>
-    body {
-      font-family: Inter, Arial, sans-serif;
-      background: #f4f7fb;
-      margin: 24px;
-      display: flex;
-      gap: 24px;
-      align-items: flex-start;
-    }
-    #left {
-      position: relative;
-    }
-    video, canvas {
-      border-radius: 10px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-      max-width: 720px;
-      width: 720px;
-      height: auto;
-      display: block;
-    }
-    .card {
-      background: #fff;
-      padding: 18px;
-      border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      width: 360px;
-    }
-    h2 { margin: 0 0 12px 0; font-size: 20px; }
-    .stat { font-size: 18px; margin: 10px 0; }
-    #messageBox {
-      margin-top: 18px;
-      padding: 12px;
-      background: #eaf6ff;
-      border-radius: 8px;
-      font-weight: 600;
-      text-align: center;
-    }
-    label { font-size: 13px; color: #555; display:block; margin-top:8px; }
-    input[type="number"] { width:100%; padding:8px; margin-top:6px; border-radius:6px; border:1px solid #ddd; }
-    button { margin-top:12px; padding:10px 12px; border-radius:8px; border:none; background:#2563eb; color:white; cursor:pointer; }
-    small { color:#666; display:block; margin-top:6px; }
-  </style>
+    <title>Restaurant Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: #fafafa;
+        }
+        #restaurantName {
+            font-size: 28px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .join-btn {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 15px 40px;
+            background-color: #ff5722;
+            color: white;
+            font-size: 20px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        #debug {
+            margin-top:20px;
+            font-size:12px;
+            color:#666;
+        }
+    </style>
 </head>
+
 <body>
 
-  <div id="left">
-    <video id="webcam" autoplay playsinline muted></video>
-    <canvas id="overlay"></canvas>
-  </div>
+    <h1>Welcome!</h1>
+    <p>Detecting the place you are in...</p>
 
-  <div class="card">
-    <h2>Wish — Queue Monitor</h2>
+    <div id="restaurantName">"Loading..."</div>
 
-    <div class="stat"><strong>People in Queue:</strong> <span id="count">0</span></div>
-    <div class="stat"><strong>Estimated Wait Time:</strong> <span id="wait">--</span></div>
+    <a href="customer.html" class="join-btn">Join</a>
 
-    <label>Average service time per person (minutes)</label>
-    <input id="avgService" type="number" min="0.5" step="0.1" value="2.5">
-    <small>Set to 2–3 for 2–3 minutes. Default = 2.5 minutes</small>
 
-    <button id="restartBtn">Restart Camera</button>
+    <div id="debug"></div>
 
-    <div id="messageBox">Please wait…</div>
-  </div>
+    <script>
+        // Put your Geoapify key here (you had one in your file)
+        const apiKey = "aa4dba1f10b34d5eb29271543b732ce9";
 
-<script>
-(async () => {
-  const video = document.getElementById('webcam');
-  const overlay = document.getElementById('overlay');
-  const ctx = overlay.getContext('2d');
+        function debugLog(msg) {
+            console.log(msg);
+            const d = document.getElementById('debug');
+            d.innerText = msg;
+        }
 
-  const countEl = document.getElementById('count');
-  const waitEl = document.getElementById('wait');
-  const avgServiceInput = document.getElementById('avgService');
-  const messageBox = document.getElementById('messageBox');
-  const restartBtn = document.getElementById('restartBtn');
+        // Try multiple radii until we find a named place
+        async function findPlaceWithRadii(lat, lng) {
+            const radii = [30, 80, 200]; // meters: try close then expand
+            for (let r of radii) {
+                debugLog(`Searching for places within ${r}m...`);
+                const url = `https://api.geoapify.com/v2/places?categories=building,education,catering,service,commercial,tourism&filter=circle:${lng},${lat},${r}&limit=3&apiKey=${apiKey}`;
 
-  // Messages rotated every 10 seconds
-  const messages = [
-    "Please wait…",
-    "You're almost there…",
-    "Your turn will be soon!",
-    "Thank you for your patience!",
-    "Hang tight — we're getting to you!"
-  ];
-  let msgIndex = 0;
-  setInterval(() => {
-    messageBox.innerText = messages[msgIndex];
-    msgIndex = (msgIndex + 1) % messages.length;
-  }, 10000); // 10s
+                try {
+                    console.log('Geoapify URL:', url);
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        console.error('Network response not ok', res.status, res.statusText);
+                        debugLog(`Network error: ${res.status}`);
+                        continue;
+                    }
+                    const data = await res.json();
+                    console.log('Geoapify response:', data);
 
-  // start camera helper
-  async function startCamera() {
-    if (video.srcObject) {
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-      video.srcObject = stream;
-      await new Promise((res) => video.onloadedmetadata = res);
-      overlay.width = video.videoWidth;
-      overlay.height = video.videoHeight;
-    } catch (e) {
-      alert('Could not access camera. Please allow camera access and try again.');
-      console.error(e);
-    }
-  }
+                    if (data.features && data.features.length > 0) {
+                        // pick the best candidate (prefer ones with a non-empty name)
+                        const candidate = data.features.find(f => f.properties && f.properties.name) || data.features[0];
+                        const name = candidate.properties.name || candidate.properties.address || "Unnamed place";
+                        document.getElementById("restaurantName").innerText = `"${name}"`;
+                        debugLog(`Found: "${name}" (radius ${r}m)`);
+                        return;
+                    } else {
+                        debugLog(`No places within ${r}m`);
+                    }
 
-  restartBtn.addEventListener('click', async () => {
-    // stop existing tracks then restart
-    if (video.srcObject) {
-      const tracks = video.srcObject.getTracks();
-      tracks.forEach(t => t.stop());
-      video.srcObject = null;
-    }
-    await startCamera();
-  });
+                } catch (err) {
+                    console.error('Fetch error', err);
+                    debugLog('Error fetching Geoapify data (see console)');
+                }
+            }
 
-  await startCamera();
+            // If we get here, nothing was found in any radius
+            document.getElementById("restaurantName").innerText = `"No named place found nearby"`;
+            debugLog('Tried all radii — no place found.');
+        }
 
-  // Load the COCO-SSD model
-  const model = await cocoSsd.load();
-  console.log('Model loaded:', model);
+        // Get user's GPS location
+        function requestLocation() {
+            if (!navigator.geolocation) {
+                document.getElementById("restaurantName").innerText = `"Geolocation not supported"`;
+                debugLog('Geolocation is not supported by this browser.');
+                return;
+            }
 
-  // Drawing helpers
-  function drawBox(box, label, score) {
-    ctx.strokeStyle = '#00FF7F';
-    ctx.lineWidth = Math.max(2, Math.round(overlay.width / 300));
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    const [x, y, width, height] = box;
-    ctx.strokeRect(x, y, width, height);
-    const text = `${label} ${(score*100).toFixed(0)}%`;
-    ctx.font = `${Math.max(12, Math.round(overlay.width / 50))}px Arial`;
-    const textWidth = ctx.measureText(text).width;
-    const pad = 6;
-    ctx.fillRect(x, y - 24, textWidth + pad, 24);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(text, x + 4, y - 6);
-  }
+            debugLog('Requesting location permission...');
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    console.log('User coords:', lat, lng);
+                    debugLog(`Got coords: ${lat.toFixed(6)}, ${lng.toFixed(6)} — searching...`);
+                    findPlaceWithRadii(lat, lng);
+                },
+                (err) => {
+                    console.error('Geolocation error', err);
+                    if (err.code === 1) {
+                        document.getElementById("restaurantName").innerText = `"Location Permission Required"`;
+                        debugLog('Location permission denied by user.');
+                    } else {
+                        document.getElementById("restaurantName").innerText = `"Unable to get location"`;
+                        debugLog(`Location error: ${err.message}`);
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
 
-  // Main detect loop
-  async function detectLoop() {
-    if (video.readyState !== 4) {
-      requestAnimationFrame(detectLoop);
-      return;
-    }
-
-    // run detection
-    const predictions = await model.detect(video);
-
-    // clear overlay
-    ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-    // count people
-    const people = predictions.filter(p => p.class === 'person' && p.score >= 0.5);
-    const peopleCount = people.length;
-    countEl.innerText = peopleCount;
-
-    // draw boxes for persons
-    for (const p of people) {
-      // p.bbox = [x, y, width, height] in pixels relative to video
-      drawBox(p.bbox, p.class, p.score);
-    }
-
-    // compute estimated wait time
-    const avgServiceMinutes = parseFloat(avgServiceInput.value) || 2.5;
-    const waitMinutes = peopleCount * avgServiceMinutes;
-    const minutes = Math.floor(waitMinutes);
-    const seconds = Math.round((waitMinutes - minutes) * 60);
-    waitEl.innerText = `${minutes} min ${seconds} sec`;
-
-    requestAnimationFrame(detectLoop);
-  }
-
-  detectLoop();
-
-})(); // end async IIFE
-</script>
+        // Start
+        requestLocation();
+    </script>
 
 </body>
 </html>
