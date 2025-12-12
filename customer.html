@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background: white;
+            padding: 30px;
+            width: 320px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+        }
+
+        label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #ff5722;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background-color: #e14c1d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>Customer Details</h2>
+
+        <form id="customerForm">
+    <label for="name">Full Name</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="phone">Contact Number</label>
+    <input type="tel" id="phone" name="phone" required>
+
+    <label for="guests">Number of Guests</label>
+    <select id="guests" name="guests" required>
+        <option value="">Select</option>
+        <option value="1">1 Guest</option>
+        <option value="2">2 Guests</option>
+        <option value="3">3 Guests</option>
+        <option value="4">4 Guests</option>
+        <option value="5">5 Guests</option>
+        <option value="6">6 Guests</option>
+        <option value="7">7 Guests</option>
+        <option value="8">8 Guests</option>
+        <option value="9">9 Guests</option>
+        <option value="10">10 Guests</option>
+    </select>
+
+    <button type="submit" class="submit-btn">Continue</button>
+</form>
+
+<script>
+document.getElementById("customerForm").addEventListener("submit", function(e) {
+    e.preventDefault(); // stop normal form submit
+
+    const url = "https://script.google.com/macros/s/AKfycbz407sxoM5f_cFI6icrohr-E22yIW-q5m9pfVfj05z4Z1DRSi-BtXp6g53Tp7g7eUwA/exec";  // ← paste URL from Google Apps Script
+
+    const data = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        guests: document.getElementById("guests").value
+    };
+
+    fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(data)
+    }).then(() => {
+        window.location.href = "page3.html"; // redirect after saving
+    });
+});
+</script>
+
+    </div>
+
+</body>
+</html>

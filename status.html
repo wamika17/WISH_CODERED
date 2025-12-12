@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Current Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fafafa;
+            text-align: center;
+            padding-top: 50px;
+        }
+
+        .card {
+            width: 350px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px auto;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h3 { margin-bottom: 15px; }
+        .value { font-size: 32px; font-weight: bold; margin: 10px 0; }
+        .msg { font-size: 18px; margin-top: 15px; color: #555; }
+        .back-btn {
+            display: block;
+            margin: 25px auto;
+            padding: 12px 20px;
+            background: #ff5722;
+            color: white;
+            width: 140px;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Your Current Status</h2>
+
+    <div class="card">
+        <h3>Number of people in queue </h3>
+        <div id="people" class="value">3</div>
+    </div>
+
+    <div class="card">
+        <h3>Estimated Wait Time</h3>
+        <div id="wait" class="value">15 minutes</div>
+    </div>
+
+    <div class="card">
+        <h3>Status Message</h3>
+        <div id="statusMessage" class="msg">Please wait, we appreciate your patience!</div>
+    </div>
+
+    <a href="page3.html" class="back-btn">Back</a>
+
+    <script>
+
+        // simulate people ahead (ESP32 will overwrite later)
+        let peopleAhead = 3;
+
+        // assume avg service time per person = 5 minutes
+        let avgTime = 5;
+
+        document.getElementById('people').innerText = peopleAhead;
+
+        // calculate wait time
+        let waitTime = peopleAhead * avgTime;
+        document.getElementById('wait').innerText = waitTime + " minutes";
+
+        // dynamic friendly messages
+        if (peopleAhead === 0) {
+            document.getElementById('statusMessage').innerText =
+                "Your turn is next! Get ready to place your order.";
+        } else if (peopleAhead <= 3) {
+            document.getElementById('statusMessage').innerText =
+                "Almost there! Thank you for waiting patiently.";
+        } else {
+            document.getElementById('statusMessage').innerText =
+                "Please wait, we appreciate your patience.";
+        }
+
+    </script>
+
+</body>
+</html>
