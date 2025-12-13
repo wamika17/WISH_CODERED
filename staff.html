@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Staff Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1b1b1b;
+            color: white;
+            margin: 0;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            width: 90%;
+            margin: auto;
+        }
+
+        .card {
+            background: #2b2b2b;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 0px 12px rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .value {
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .label {
+            font-size: 18px;
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+
+        #notification {
+            margin-top: 40px;
+            padding: 20px;
+            background: #e74c3c;
+            border-radius: 10px;
+            display: none;
+            font-size: 20px;
+            font-weight: bold;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>Restaurant Staff Dashboard</h1>
+
+    <div class="dashboard">
+
+        <div class="card">
+            <div class="value" id="ent">100</div>
+            <div class="label">Customers Entered</div>
+        </div>
+
+        <div class="card">
+            <div class="value" id="done">90</div>
+            <div class="label">Orders Completed</div>
+        </div>
+
+        <div class="card">
+            <div class="value" id="reneging">10%</div>
+            <div class="label">Reneging Rate (%)</div>
+        </div>
+
+    </div>
+
+    <div id="notification">
+        ⚠ Queue is long! Please open Counter 2.
+    </div>
+
+    <script>
+
+     
+async function fetchData() {
+  try {
+    const response = await fetch("http://localhost:3000/data");
+    const data = await response.json();
+
+    console.log(data); // for debugging
+
+    // use data here
+  } catch (err) {
+    console.error("Error fetching data:", err);
+  }
+}
+
+// fetch every 2 seconds
+setInterval(fetchData, 2000);
+fetchData();
+
+
+        // Hardcoded values for judges
+        let ENT = 100;
+        let DONE = 90;
+
+        let reneging = ((ENT - DONE) / ENT) * 100;
+        reneging = reneging.toFixed(1);
+
+        document.getElementById("reneging").innerText = reneging + "%";
+
+        // Simulated current queue length
+        let currentQueueLength = 0;
+
+        // Simulate people entering queue (for demo)
+        setInterval(() => {
+            currentQueueLength++;
+
+            // When queue hits 11 AND DONE < ENT → alert
+            if (currentQueueLength > 10 && DONE < ENT) {
+                document.getElementById("notification").style.display = "block";
+            }
+
+        }, 1000); // increases by 1 every second (demo)
+    </script>
+
+</body>
+</html>

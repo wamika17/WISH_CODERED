@@ -12,23 +12,34 @@
 
         h2 { margin-bottom: 20px; }
 
+        /* GRID LAYOUT */
+        #menuList {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 95%;
+            margin: 0 auto;
+        }
+
         .item {
-            width: 330px;
             background: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
-            margin: 15px auto;
             box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
             text-align: left;
+            border-left: 12px solid;
+            height: 330px;
         }
 
         img {
             width: 100%;
-            border-radius: 12px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
         }
 
-        .title { font-size: 20px; font-weight: bold; margin-top: 10px; }
-        .desc { font-size: 15px; margin-top: 5px; color: #444; }
+        .title { font-size: 17px; font-weight: bold; margin-top: 8px; }
+        .desc { font-size: 14px; margin-top: 5px; color: #444; }
 
         .back-btn {
             display: block;
@@ -40,31 +51,79 @@
             text-decoration: none;
             border-radius: 8px;
         }
+
+        /* MAKE IT RESPONSIVE */
+        @media screen and (max-width: 900px) {
+            #menuList {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            #menuList {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+
     </style>
 </head>
 <body>
 
     <h2>Food Menu</h2>
 
-    <div class="item">
-        <img src="https://i.imgur.com/Wv5ZJFx.jpeg">
-        <div class="title">Paneer Butter Masala ⭐4.8</div>
-        <div class="desc">Prep Time: 15 mins | Chef's Special</div>
-    </div>
-
-    <div class="item">
-        <img src="https://i.imgur.com/iv9Y5QW.jpeg">
-        <div class="title">Chicken Biryani ⭐4.7</div>
-        <div class="desc">Prep Time: 20 mins</div>
-    </div>
-
-    <div class="item">
-        <img src="https://i.imgur.com/TfEE2h7.jpeg">
-        <div class="title">Veg Fried Rice ⭐4.5</div>
-        <div class="desc">Prep Time: 12 mins</div>
-    </div>
+    <div id="menuList"></div>
 
     <a href="page3.html" class="back-btn">Back</a>
+
+    <script>
+        const dishes = [
+            { name: "Paneer Butter Masala", img: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398", rating: "4.8", time: 15 },
+            { name: "Chicken Biryani", img: "https://i.pinimg.com/1200x/d4/43/4f/d4434fa1c67acd990a86bc2cb6b618d9.jpg?auto=format&fit=crop&w=800&q=60", rating: "4.7", time: 20 },
+            { name: "Veg Fried Rice", img: "https://images.unsplash.com/photo-1664717698774-84f62382613b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.5", time: 12 },
+            { name: "Grilled Sandwich", img: "https://images.unsplash.com/photo-1562059390-a761a084768e", rating: "4.6", time: 7 },
+            { name: "Masala Dosa", img: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.9", time: 8 },
+            { name: "Idli Sambar", img: "https://images.unsplash.com/photo-1632104667384-06f58cb7ad44?q=80&w=560&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.8", time: 6 },
+            { name: "Chole Bhature", img: "https://i.pinimg.com/736x/d6/60/25/d660255e0ac13e20bc3c674ee3d11ac4.jpg?auto=format&fit=crop&w=800&q=60", rating: "4.7", time: 10 },
+            { name: "Veg Manchurian", img: "https://i.pinimg.com/1200x/c1/34/71/c134719ea4cc96ab305f5701c1780176.jpg?auto=format&fit=crop&w=800&q=60", rating: "4.5", time: 14 },
+            { name: "Hakka Noodles", img: "https://images.unsplash.com/photo-1589302168068-964664d93dc0", rating: "4.6", time: 11 },
+            { name: "Margherita Pizza", img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.9", time: 18 },
+            { name: "Cheese Burger", img: "https://images.unsplash.com/photo-1550547660-d9450f859349", rating: "4.4", time: 9 },
+            { name: "French Fries", img: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5", rating: "4.5", time: 5 },
+            { name: "Pasta Alfredo", img: "https://images.unsplash.com/photo-1662197480393-2a82030b7b83?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.7", time: 16 },
+            { name: "Tomato Soup", img: "https://images.unsplash.com/photo-1578020190125-f4f7c18bc9cb?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.6", time: 6 },
+            { name: "Chicken Curry", img: "https://images.unsplash.com/photo-1708782344490-9026aaa5eec7?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.8", time: 22 },
+            { name: "Dal Tadka", img: "https://images.unsplash.com/photo-1626500154744-e4b394ffea16?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.5", time: 13 },
+            { name: "Fish Fry", img: "https://images.unsplash.com/photo-1656389863341-1dfd38ee6edc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.7", time: 12 },
+            { name: "Hot dog", img: "https://images.unsplash.com/photo-1638368593249-7cadb261e8b3?q=80&w=391&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.6", time: 3 },
+            { name: "Egg Omelette", img: "https://images.unsplash.com/photo-1689329963875-42bec88713b9?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.5", time: 4 },
+            { name: "Chocolate Brownie", img: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=800&q=60", rating: "4.9", time: 9 }
+        ];
+
+        // Sort items by prep time
+        dishes.sort((a, b) => a.time - b.time);
+
+        function getColor(time) {
+            if (time <= 10) return "#4CAF50";  // green
+            if (time <= 18) return "#FFEB3B";  // yellow
+            return "#F44336";  // red
+        }
+
+        const menuDiv = document.getElementById("menuList");
+
+        dishes.forEach(item => {
+            let div = document.createElement("div");
+            div.className = "item";
+            div.style.borderLeftColor = getColor(item.time);
+
+            div.innerHTML = `
+                <img src="${item.img}">
+                <div class="title">${item.name} ⭐${item.rating}</div>
+                <div class="desc">Prep Time: ${item.time} mins</div>
+            `;
+
+            menuDiv.appendChild(div);
+        });
+    </script>
 
 </body>
 </html>

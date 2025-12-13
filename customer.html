@@ -92,7 +92,7 @@
 document.getElementById("customerForm").addEventListener("submit", function(e) {
     e.preventDefault(); // stop normal form submit
 
-    const url = "https://script.google.com/macros/s/AKfycbz407sxoM5f_cFI6icrohr-E22yIW-q5m9pfVfj05z4Z1DRSi-BtXp6g53Tp7g7eUwA/exec";  // ← paste URL from Google Apps Script
+    const url = "https://script.google.com/macros/s/AKfycbz407sxoM5f_cFI6icrohr-E22yIW-q5m9pfVfj05z4Z1DRSi-BtXp6g53Tp7g7eUwA/exec";
 
     const data = {
         name: document.getElementById("name").value,
@@ -100,6 +100,10 @@ document.getElementById("customerForm").addEventListener("submit", function(e) {
         guests: document.getElementById("guests").value
     };
 
+    // ⭐ Save guest count for seatmap.html
+    localStorage.setItem("guestCount", data.guests);
+
+    // Send data to Google Sheets
     fetch(url, {
         method: "POST",
         mode: "no-cors",
@@ -109,6 +113,7 @@ document.getElementById("customerForm").addEventListener("submit", function(e) {
     });
 });
 </script>
+
 
     </div>
 

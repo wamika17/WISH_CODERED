@@ -19,11 +19,22 @@
             border-radius: 12px;
             margin: 15px auto;
             box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+            text-align: left;
+            border-left: 12px solid; /* dynamic */
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        img { width: 100%; border-radius: 12px; }
-        .title { font-size: 20px; font-weight: bold; margin-top: 10px; }
-        .desc { font-size: 15px; margin-top: 5px; color: #444; }
+        .drink-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .title { font-size: 20px; font-weight: bold; }
+        .desc { font-size: 15px; margin-top: 3px; color: #444; }
 
         .back-btn {
             display: block;
@@ -37,29 +48,51 @@
         }
     </style>
 </head>
+
 <body>
 
     <h2>Beverages</h2>
 
-    <div class="item">
-        <img src="https://i.imgur.com/xgJYB8j.jpeg">
-        <div class="title">Fresh Lime Soda ⭐4.6</div>
-        <div class="desc">Prep Time: 5 mins</div>
-    </div>
-
-    <div class="item">
-        <img src="https://i.imgur.com/qvlNlbX.jpeg">
-        <div class="title">Cold Coffee ⭐4.8</div>
-        <div class="desc">Prep Time: 7 mins</div>
-    </div>
-
-    <div class="item">
-        <img src="https://i.imgur.com/8cPMORt.jpeg">
-        <div class="title">Mango Milkshake ⭐4.9</div>
-        <div class="desc">Prep Time: 10 mins | Bestseller</div>
-    </div>
+    <div id="drinkList"></div>
 
     <a href="page3.html" class="back-btn">Back</a>
+
+    <script>
+        const drinks = [
+            { name: "Cold Coffee", img: "https://i.pinimg.com/1200x/22/1b/54/221b545576fc891208fe4b93974f6dba.jpg?auto=format&fit=crop&w=600&q=60", rating: "4.8", time: 7 },
+            { name: "Fresh Lime Soda", img: "https://i.pinimg.com/1200x/95/5a/13/955a13881ab9c428eb525e2dfc8dbf39.jpg?auto=format&fit=crop&w=600&q=60", rating: "4.6", time: 3 },
+            { name: "Mango Smoothie", img: "https://i.pinimg.com/1200x/ac/65/3c/ac653c5925683c949fa1de6402b372ce.jpg?auto=format&fit=crop&w=600&q=60", rating: "4.9", time: 5 },
+            { name: "Iced Tea", img: "https://images.unsplash.com/photo-1497534446932-c925b458314e?auto=format&fit=crop&w=600&q=60", rating: "4.5", time: 6 },
+            { name: "Strawberry Milkshake", img: "https://i.pinimg.com/1200x/94/2b/03/942b0316b3cb91cc5c5f2ec0c47a53cb.jpg?auto=format&fit=crop&w=600&q=60", rating: "4.7", time: 8 }
+        ];
+
+        // Sort by prep time
+        drinks.sort((a, b) => a.time - b.time);
+
+        function getColor(time) {
+            if (time <= 4) return "#4CAF50";  // green
+            if (time <= 7) return "#FFEB3B";  // yellow
+            return "#F44336"; // red
+        }
+
+        const drinkDiv = document.getElementById("drinkList");
+
+        drinks.forEach(d => {
+            let div = document.createElement("div");
+            div.className = "item";
+            div.style.borderLeftColor = getColor(d.time);
+
+            div.innerHTML = `
+                <img src="${d.img}" class="drink-img">
+                <div>
+                    <div class="title">${d.name} ⭐${d.rating}</div>
+                    <div class="desc">Prep Time: ${d.time} mins</div>
+                </div>
+            `;
+
+            drinkDiv.appendChild(div);
+        });
+    </script>
 
 </body>
 </html>

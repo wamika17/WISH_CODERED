@@ -1,45 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Restaurant Dashboard - Home</title>
+    <title>Customer Dashboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background: #fafafa;
             text-align: center;
-            padding-top: 60px;
+            padding: 40px;
         }
 
         h2 {
             margin-bottom: 30px;
         }
 
-        .option-card {
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
             width: 300px;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            margin: 20px auto;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-            font-size: 20px;
-            font-weight: bold;
-            text-decoration: none;
-            color: black;
-            display: block;
+            margin: auto;
         }
 
-        .option-card:hover {
-            background: #ffe2d6;
+        .option-btn {
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 10px;
+            background: #ff5722;
+            color: white;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .option-btn:hover {
+            background: #e14818;
         }
     </style>
 </head>
+
 <body>
 
-    <h2>Welcome to Your Dashboard</h2>
+    <h2>Welcome to the Dashboard</h2>
 
-    <a href="status.html" class="option-card">Current Status</a>
-    <a href="food.html" class="option-card">Food Menu</a>
-    <a href="beverages.html" class="option-card">Beverages</a>
+    <div class="options-container">
+        <a href="status.html" class="option-btn">Current Status</a>
+        <a href="food.html" class="option-btn">Food Menu</a>
+        <a href="beverages.html" class="option-btn">Beverages</a>
+        <a href="seatmap.html" class="option-btn">Seat Availability</a> <!-- NEW -->
+    </div>
 
 </body>
 </html>

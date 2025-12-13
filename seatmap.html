@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seat Availability</title>
+
+    <style>
+        body {
+            background: #faf3e0;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #4e3b2c;
+        }
+
+        #layout {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .table {
+            background: #c8a97e;
+            padding: 20px;
+            width: 180px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .table-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #4e3b2c;
+        }
+
+        .seats-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .seat {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        .green-seat {
+            background: #32cd32;
+        }
+
+        .yellow-seat {
+            background: yellow;
+        }
+
+        .occupied {
+            background: red;
+        }
+
+        .back-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 12px 20px;
+            background: #7a4b2b;
+            color: white;
+            width: 160px;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Seat Availability</h2>
+    <p>Select a table suitable for your group size.</p>
+
+    <div id="layout"></div>
+
+    <a href="page3.html" class="back-btn">Back</a>
+
+    <script>
+        // ---------------- SETUP ----------------
+        let layoutDiv = document.getElementById("layout");
+
+        let guests = parseInt(localStorage.getItem("guestCount"));
+        if (!guests) guests = 2;
+
+        // ---------------- RENDER FUNCTION ----------------
+        function renderSeats(forceFlag) {
+            layoutDiv.innerHTML = ""; // clear old layout
+
+            let tables = [
+                {
+                    id: 1,
+                    seats: 2,
+                    occupied: forceFlag === 0 ? [true, true] : [false, false]
+                },
+                { id: 2, seats: 4, occupied: [false, false, false, true] },
+                { id: 3, seats: 6, occupied: [false, false, false, false, false, false] },
+                { id: 4, seats: 4, occupied: [true, true, false, false] },
+                { id: 5, seats: 3, occupied: [false, false, false] }
+            ];
+
+            tables.forEach(table => {
+                let freeSeats = table.occupied.filter(x => !x).length;
+
+                let div = document.createElement("div");
+                div.className = "table";
+                div.innerHTML = `<div class="table-title">Table ${table.id} (${table.seats}-seater)</div>`;
+
+                let seatContainer = document.createElement("div");
+                seatContainer.className = "seats-container";
+
+                let canSeatGroup = freeSeats >= guests;
+                let greensToAssign = canSeatGroup ? guests : 0;
+
+                table.occupied.forEach(isOccupied => {
+                    let seat = document.createElement("div");
+                    seat.className = "seat";
+
+                    if (isOccupied) {
+                        seat.classList.add("occupied");
+                    } else if (greensToAssign > 0) {
+                        seat.classList.add("green-seat");
+                        greensToAssign--;
+                    } else {
+                        seat.classList.add("yellow-seat");
+                    }
+
+                    seatContainer.appendChild(seat);
+                });
+
+                div.appendChild(seatContainer);
+                layoutDiv.appendChild(div);
+            });
+        }
+
+        // ---------------- FETCH LIVE DATA ----------------
+        async function fetchData() {
+            try {
+                const response = await fetch("http://localhost:3000/data");
+                const data = await response.json();
+
+                console.log("Sensor data:", data);
+                renderSeats(data.flag);
+
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            }
+        }
+
+        setInterval(fetchData, 2000);
+        fetchData();
+    </script>
+
+</body>
+</html>

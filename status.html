@@ -35,6 +35,10 @@
     </style>
 </head>
 <body>
+<div class="status-card">
+  <div>People in queue: <span id="queueCount">--</span></div>
+  <div>Estimated wait: <span id="waitTime">--</span></div>
+</div>
 
     <h2>Your Current Status</h2>
 
@@ -56,6 +60,26 @@
     <a href="page3.html" class="back-btn">Back</a>
 
     <script>
+
+     
+async function fetchData() {
+  try {
+    const response = await fetch("http://localhost:3000/data");
+    const data = await response.json();
+
+    console.log(data); // for debugging
+
+    // use data here
+  } catch (err) {
+    console.error("Error fetching data:", err);
+  }
+}
+
+// fetch every 2 seconds
+setInterval(fetchData, 2000);
+fetchData();
+
+
 
         // simulate people ahead (ESP32 will overwrite later)
         let peopleAhead = 3;
