@@ -1,141 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Restaurant Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background: #fafafa;
-        }
-        #restaurantName {
-            font-size: 28px;
-            margin-top: 20px;
-            font-weight: bold;
-        }
-        .join-btn {
-            display: inline-block;
-            margin-top: 40px;
-            padding: 15px 40px;
-            background-color: #ff5722;
-            color: white;
-            font-size: 20px;
-            border-radius: 8px;
-            text-decoration: none;
-        }
-        #debug {
-            margin-top:20px;
-            font-size:12px;
-            color:#666;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>WISH – QSR Dashboard</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="bg-gray-100 font-sans">
 
-    <h1>Welcome!</h1>
-    <p>Detecting Ctrl + `
+<!-- Navbar -->
+<div class="bg-white shadow px-6 py-4 flex justify-between items-center">
+  <h1 class="text-2xl font-bold">🍔 WISH Dashboard</h1>
+  <span class="text-gray-500">Live Monitoring</span>
+</div>
 
-        the place you are in...</p>
+<!-- Alert Popup -->
+<div id="alertBox"
+     class="hidden fixed top-6 right-6 bg-red-600 text-white px-6 py-4 rounded-xl shadow-lg z-50">
+  <p id="alertText" class="font-semibold"></p>
+</div>
 
-    <div id="restaurantName">"Loading..."</div>
+<!-- Dashboard Cards -->
+<div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 
-    <a href="customer.html" class="join-btn">Join</a>
+  <!-- Queue Length -->
+  <div id="queueCard" class="bg-white rounded-xl shadow p-5">
+    <h2 class="text-gray-500">Queue Length</h2>
+    <p id="queueLength" class="text-4xl font-bold text-blue-600">0</p>
+  </div>
 
+  <!-- Wait Time -->
+  <div id="waitCard" class="bg-white rounded-xl shadow p-5">
+    <h2 class="text-gray-500">Estimated Wait Time</h2>
+    <p id="waitTime" class="text-4xl font-bold text-orange-500">0 min</p>
+  </div>
 
-    <div id="debug"></div>
+  <!-- Counters -->
+  <div id="counterCard" class="bg-white rounded-xl shadow p-5">
+    <h2 class="text-gray-500">Counters Open</h2>
+    <p id="countersOpen" class="text-4xl font-bold text-green-600">0</p>
+  </div>
 
-    <script>
-        // Put your Geoapify key here (you had one in your file)
-        const apiKey = "aa4dba1f10b34d5eb29271543b732ce9";
+</div>
 
-        function debugLog(msg) {
-            console.log(msg);
-            const d = document.getElementById('debug');
-            d.innerText = msg;
-        }
+<script>
+/* ---------------- THRESHOLDS ---------------- */
+const MAX_QUEUE = 10;
+const MAX_WAIT = 25; // minutes
+const MIN_COUNTERS = 2;
+const AVG_SERVICE_TIME = 2.5;
 
-        // Try multiple radii until we find a named place
-        async function findPlaceWithRadii(lat, lng) {
-            const radii = [30, 80, 200]; // meters: try close then expand
-            for (let r of radii) {
-                debugLog(`Searching for places within ${r}m...`);
-                const url = `https://api.geoapify.com/v2/places?categories=building,education,catering,service,commercial,tourism&filter=circle:${lng},${lat},${r}&limit=3&apiKey=${apiKey}`;
+/* ---------------- ALERT FUNCTION ---------------- */
+function showAlert(message) {
+  const alertBox = document.getElementById("alertBox");
+  const alertText = document.getElementById("alertText");
 
-                try {
-                    console.log('Geoapify URL:', url);
-                    const res = await fetch(url);
-                    if (!res.ok) {
-                        console.error('Network response not ok', res.status, res.statusText);
-                        debugLog(`Network error: ${res.status}`);
-                        continue;
-                    }
-                    const data = await res.json();
-                    console.log('Geoapify response:', data);
+  alertText.innerText = message;
+  alertBox.classList.remove("hidden");
 
-                    if (data.features && data.features.length > 0) {
-                        // pick the best candidate (prefer ones with a non-empty name)
-                        const candidate = data.features.find(f => f.properties && f.properties.name) || data.features[0];
-                        const name = candidate.properties.name || candidate.properties.address || "Unnamed place";
-                        document.getElementById("restaurantName").innerText = `"${name}"`;
-                        debugLog(`Found: "${name}" (radius ${r}m)`);
-                        return;
-                    } else {
-                        debugLog(`No places within ${r}m`);
-                    }
+  setTimeout(() => {
+    alertBox.classList.add("hidden");
+  }, 4000);
+}
 
-                } catch (err) {
-                    console.error('Fetch error', err);
-                    debugLog('Error fetching Geoapify data (see console)');
-                }
-            }
+/* ---------------- UPDATE DASHBOARD ---------------- */
+function updateDashboard(queue, counters) {
 
-            // If we get here, nothing was found in any radius
-            document.getElementById("restaurantName").innerText = `"No named place found nearby"`;
-            debugLog('Tried all radii — no place found.');
-        }
+  const waitTime = queue * AVG_SERVICE_TIME;
 
-        // Get user's GPS location
-        function requestLocation() {
-            if (!navigator.geolocation) {
-                document.getElementById("restaurantName").innerText = `"Geolocation not supported"`;
-                debugLog('Geolocation is not supported by this browser.');
-                return;
-            }
+  document.getElementById("queueLength").innerText = queue;
+  document.getElementById("waitTime").innerText = waitTime + " min";
+  document.getElementById("countersOpen").innerText = counters;
 
-            debugLog('Requesting location permission...');
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    console.log('User coords:', lat, lng);
-                    debugLog(`Got coords: ${lat.toFixed(6)}, ${lng.toFixed(6)} — searching...`);
-                    findPlaceWithRadii(lat, lng);
-                },
-                (err) => {
-                    console.error('Geolocation error', err);
-                    if (err.code === 1) {
-                        document.getElementById("restaurantName").innerText = `"Location Permission Required"`;
-                        debugLog('Location permission denied by user.');
-                    } else {
-                        document.getElementById("restaurantName").innerText = `"Unable to get location"`;
-                        debugLog(`Location error: ${err.message}`);
-                    }
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-        }
+  // ALERT CONDITIONS
+  if (queue > MAX_QUEUE) {
+    showAlert("🚨 High Rush Alert: Queue limit exceeded");
+  }
 
-        // Start
-        requestLocation();
+  if (waitTime > MAX_WAIT) {
+    showAlert("⏳ Delay Warning: Wait time too high");
+  }
 
-        
-    </script>
+  if (counters < MIN_COUNTERS) {
+    showAlert("⚠️ Action Required: Open more counters");
+  }
+}
+
+/* ---------------- SIMULATION (Replace with real sensors later) ---------------- */
+setInterval(() => {
+  const simulatedQueue = Math.floor(Math.random() * 20);
+  const simulatedCounters = Math.floor(Math.random() * 3) + 1;
+
+  updateDashboard(simulatedQueue, simulatedCounters);
+}, 5000);
+</script>
 
 </body>
 </html>
